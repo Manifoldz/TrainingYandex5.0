@@ -40,7 +40,6 @@ func main() {
 		}
 		daysOfWeek[date.Weekday().String()] -= 1
 
-		//fmt.Print(date.Weekday().String())
 	}
 	var firstWeekDay string
 	fmt.Scan(&firstWeekDay)
@@ -54,6 +53,7 @@ func main() {
 	daysOfWeek[firstWeekDay] += 1
 
 	if year%400 == 0 || (year%4 == 0 && year%100 != 0) {
+
 		nextDay := map[string]string{
 			"Monday":    "Tuesday",
 			"Tuesday":   "Wednesday",
@@ -79,7 +79,6 @@ func main() {
 	min_key := max_key
 
 	for str, val := range daysOfWeek {
-		fmt.Printf("Day %s: %d", str, val)
 		if val > max {
 			max = val
 			max_key = str
