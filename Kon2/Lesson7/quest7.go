@@ -61,32 +61,9 @@ func main() {
 				min = num
 			}
 
-			// if i == 0 {
-			// 	min = num
-			// } else if num < min {
-			// 	min_old = min
-			// 	min = num
-			// }
-
-			// if i == n-1 {
-			// 	if i-startPos > min {
-			// 		matrix[k] = append(matrix[k], i-startPos)
-			// 		matrix[k] = append(matrix[k], 1)
-			// 	} else {
-			// 		matrix[k] = append(matrix[k], i-startPos+1)
-			// 	}
-			// } else if i-startPos >= min {
-			// 	matrix[k] = append(matrix[k], i-startPos)
-			// 	if i-startPos == min && num != min_old {
-			// 		min = 100001
-			// 	} else {
-			// 		min = num
-			// 	}
-			// 	startPos = i
-			// }
 		}
 	}
-
+	//вывод
 	for _, str := range matrix {
 		fmt.Println(len(str))
 		for idx, num := range str {
