@@ -58,13 +58,13 @@ func main() {
 			addInstead(i, up, down, i, &matrix)
 		}
 	}
-	//максимальный up нужно поставить после последнего положительного смещения
+	//максимальный up-down с положительным down нужно поставить после последнего положительного смещения
 	max := -1
 	var max_id int
 	startMinus := -1
 	for i := 0; i < num; i++ {
-		if matrix[i][0] >= max {
-			max = matrix[i][0]
+		if matrix[i][1] >= 0 && matrix[i][0]-matrix[i][1] >= max {
+			max = matrix[i][0] - matrix[i][1]
 			max_id = i
 		}
 		if matrix[i][1] <= 0 && startMinus == -1 {
@@ -79,7 +79,7 @@ func main() {
 		tempDown := tempUp - matrix[max_id][1]
 		tempNo := matrix[max_id][2]
 		displacement(max_id, startMinus, &matrix, true)
-		addInstead(startMinus, tempUp, tempDown, tempNo, &matrix)
+		addInstead(startMinus+1, tempUp, tempDown, tempNo, &matrix)
 	} else if max_id < startMinus {
 		tempUp := matrix[max_id][0]
 		tempDown := tempUp - matrix[max_id][1]
@@ -89,7 +89,7 @@ func main() {
 	}
 
 	show(&matrix)
-	showTest(&matrix)
+	//showTest(&matrix)
 }
 
 func addInstead(pos int, up, down, i int, matrix *[][]int) {
@@ -132,11 +132,11 @@ func show(matrix *[][]int) {
 	}
 }
 
-func showTest(matrix *[][]int) {
-	for idxRow, row := range *matrix {
-		fmt.Print("\n", idxRow, ": ")
-		for _, val := range row {
-			fmt.Print(val, " ")
-		}
-	}
-}
+// func showTest(matrix *[][]int) {
+// 	for idxRow, row := range *matrix {
+// 		fmt.Print("\n", idxRow, ": ")
+// 		for _, val := range row {
+// 			fmt.Print(val, " ")
+// 		}
+// 	}
+// }

@@ -1,0 +1,16 @@
+package main
+
+import "fmt"
+
+func main() {
+	var max, curr int
+	for i := 0; i < 1000; i++ {
+		var up, diff, num int
+		fmt.Scanf("%d %d %d\n", &up, &diff, &num)
+		if curr+up > max {
+			max = curr + up
+		}
+		curr += diff
+	}
+	fmt.Print(max)
+}
