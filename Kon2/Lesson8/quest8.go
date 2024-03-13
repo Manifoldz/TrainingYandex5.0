@@ -16,8 +16,8 @@ func main() {
 	}
 
 	matrix := make([][]int, n)
-	for _, row := range matrix {
-		row = make([]int, m)
+	for i := range matrix {
+		matrix[i] = make([]int, m)
 	}
 	var input int
 	for i := 0; i < n; i++ {
@@ -35,39 +35,71 @@ func main() {
 		}
 	}
 
-	//заполним массив максимумов в строках
-	sliceRow := make([]int, n)
-	maxRow
-	for i := 0; i < n; i++ {
-		sliceRow[i] = findRowMax(&matrix[i])
+	//найдем максимум в строках
+	rowMax1, _, _ := findMaxRow(&matrix, -1, -1)
 
-	}
+	//найдем максимум в столбцах
+	_, colMax1, _ := findMaxCol(&matrix, rowMax1)
 
-	fmt.Print(maxRow+1, maxCol+1)
-}
+	//найдем максимум1вар в матрице
+	_, _, max1 := findMaxRow(&matrix, rowMax1, colMax1)
 
-func findRowMax(row *[]int) int {
-	max := (*row)[0]
-	max_idx := 0
-	for i := 1; i < len(*row); i++ {
-		if (*row)[i] > max {
-			max = (*row)[i]
-			max_idx = i
+	//2найдем максимум в столбцах
+	rowMax2, colMax3, _ := findMaxCol(&matrix, -1)
+
+	//2найдем максимум в строках
+	_, colMax2, _ := findMaxRow(&matrix, rowMax2, -1)
+
+	//2найдем максимум2вар в матрице
+	_, _, max2 := findMaxRow(&matrix, rowMax2, colMax2)
+
+	//3найдем максимум в строках
+	rowMax3, _, _ := findMaxRow(&matrix, -1, colMax3)
+
+	//3найдем максимум3вар в матрице
+	_, _, max3 := findMaxRow(&matrix, rowMax3, colMax3)
+
+	//сравним максимумы и выведем лучшее сочетание
+	if max1 < max2 {
+		if max3 < max1 {
+			fmt.Print(rowMax3+1, colMax3+1)
+		} else {
+			fmt.Print(rowMax1+1, colMax1+1)
+		}
+	} else {
+		if max3 < max2 {
+			fmt.Print(rowMax3+1, colMax3+1)
+		} else {
+			fmt.Print(rowMax2+1, colMax2+1)
 		}
 	}
-	(*row)[max_idx] *= -1
-	return max
 }
 
-func findColMax(matrix *[][]int, numCol int, isAll bool) int {
-	max := (*matrix)[0][numCol]
-	max_idx := 0
-	for i := 1; i < len(*matrix); i++ {
-		if (*matrix)[i][numCol] > max {
-			max = (*matrix)[i][numCol]
-			max_idx = i
+func findMaxRow(matrix *[][]int, skipRow int, skipCol int) (row, col, max int) {
+	for i := 0; i < len(*matrix); i++ {
+		if i == skipRow {
+			continue
+		}
+		for j := 0; j < len((*matrix)[0]); j++ {
+			if (*matrix)[i][j] > max && j != skipCol {
+				max = (*matrix)[i][j]
+				row = i
+				col = j
+			}
 		}
 	}
-	(*matrix)[max_idx][numCol] *= -1
-	return max
+	return
+}
+
+func findMaxCol(matrix *[][]int, skipRow int) (row, col, max int) {
+	for i := 0; i < len((*matrix)[0]); i++ {
+		for j := 0; j < len(*matrix); j++ {
+			if (*matrix)[j][i] > max && j != skipRow {
+				max = (*matrix)[j][i]
+				col = i
+				row = j
+			}
+		}
+	}
+	return
 }
