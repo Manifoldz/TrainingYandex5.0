@@ -14,65 +14,110 @@ func main() {
 		fmt.Print("Read-mistake1: ", err)
 		return
 	}
-	array := make([][]byte, m+2)
+	array := make([][]int, m)
 	for i := range array {
-		array[i] = make([]byte, n+2)
+		array[i] = make([]int, n)
 	}
 
-	var symbol byte
 	var counter int
-	for i := 1; i < m+1; i++ {
-		for j := 1; j <= n+1; j++ {
+	var symbol byte
+	for i := 0; i < m; i++ {
+		for j := 0; j <= n; j++ {
 			_, err := fmt.Fscanf(reader, "%c", &symbol)
 			if err != nil || (symbol != '#' && symbol != '.' && j != n) || (j == n && symbol != '\n') {
 				fmt.Print("Read-mistake2: ", err)
 				return
 			}
 			if symbol == '#' {
-				counter++
-			}
-			if j != n+1 {
-				array[i][j] = symbol
+				array[i][j] = 1
 			}
 		}
 	}
-	sliceOffsetY := []int{-1, -1, -1, 0, 1, 0, 1, 1}
-	sliceOffsetX := []int{-1, 0, 1, -1, -1, 1, 1, 0}
+	parsedArray := make([][]int, m)
+	for i := range parsedArray {
+		parsedArray[i] = make([]int, n)
+		copy(parsedArray[i], array[i])
+	}
 
-	var isExistA bool
-	var isExistB bool
+	parsedArray, counter = parseArr(parsedArray, m, n)
+	if counter < 2 {
+		fmt.Print("NO")
+		return
+	}
+
+	if !ProcessHoriz(&parsedArray, m, n, counter, false) {
+		array = transposeArr(&array, m, n)
+		array, _ = parseArr(array, n, m)
+		if !ProcessHoriz(&array, n, m, counter, true) {
+			fmt.Print("NO")
+		}
+	}
+}
+
+func ProcessHoriz(array *[][]int, m, n, counter int, reverse bool) bool {
+	//обработка горизонтальная
+	num := 0 //изначально 0, после при 1-а, 2-б
 	var isEnd bool
-	//обработка матрицы
 	for i := 0; i < m && !isEnd; i++ {
 		for j := 0; j < n && !isEnd; j++ {
-			if array[i][j] == '#' {
-				//если последняя ячейка
-				if counter < 2 {
-					if isExistA && !isExistB {
-						array[i][j] = 'b'
-						isEnd = true
-					} else if !isExistA {
-						fmt.Print("NO")
-						return
+			if (*array)[i][j] != 0 {
+				if counter-(*array)[i][j] == 0 && num == 0 {
+					counter -= (*array)[i][j]
+					for k := 1; k < (*array)[i][j]; k++ {
+						(*array)[i][j-k] = 1
+					}
+					(*array)[i][j] = 2
+					num = 3
+				} else {
+					var add bool
+					//самая первая проходка
+					if num == 0 {
+						num = 1
+					}
+					counter -= (*array)[i][j]
+					if i == m-1 || (counter-(*array)[i+1][j] == 0 || (*array)[i+1][j] != (*array)[i][j]) {
+						add = true
+					}
+					for k := (*array)[i][j] - 1; k >= 0; k-- {
+						(*array)[i][j-k] = num
+					}
+					if add {
+						num++
 					}
 				}
-				// если первая ячейка то пишем в нее 'a' и выходим
-				if !isExistA {
-					array[i][j] = 'a'
-					counter--
-					continue
+			}
+			if num == 3 {
+				isEnd = true
+				if counter != 0 {
+					return false
 				}
-				//иначе отдаем функции подсчет
-				array[i][j] = neighbours(&array, &sliceOffsetY, &sliceOffsetX, i, j)
 			}
 		}
 	}
+	if reverse {
+		reverseArr := transposeArr(array, m, n)
+		printArr(&reverseArr, n, m)
+	} else {
+		printArr(array, m, n)
+	}
+	return true
+}
 
+func printArr(array *[][]int, m, n int) {
 	//вывод ответа
 	fmt.Println("YES")
+	var answer string
 	for i := 0; i < m; i++ {
 		for j := 0; j < n; j++ {
-			fmt.Print(string(array[i][j]))
+			switch (*array)[i][j] {
+			case 1:
+				answer = "a"
+			case 2:
+				answer = "b"
+			default:
+				answer = "."
+			}
+			fmt.Print(answer)
 		}
 		if i != m-1 {
 			fmt.Println()
@@ -80,32 +125,34 @@ func main() {
 	}
 }
 
-func neighbours(array *[][]byte, sliceY, sliceX *[]int, i, j int) (answer byte) {
-	var regA, regB int
-	var crossA, crossB int
-	for k := 0; k < 8; k++ {
-		if (*array)[i+(*sliceY)[k]][j+(*sliceX)[k]] == 'a' {
-			if k%2 == 1 {
-				crossA++
-			} else {
-				regA++
-			}
-		} else if (*array)[i+(*sliceY)[k]][j+(*sliceX)[k]] == 'b' {
-			if k%2 == 1 {
-				crossB++
-			} else {
-				regB++
+func parseArr(array [][]int, m, n int) (arrayNew [][]int, counter int) {
+	for i := 0; i < m; i++ {
+		for j := 0; j < n; j++ {
+			if array[i][j] == 1 {
+				counter++
+				if j != 0 {
+					array[i][j] = array[i][j-1] + 1
+					array[i][j-1] = 0
+				} else {
+					array[i][j] = 1
+				}
 			}
 		}
 	}
+	return array, counter
+}
 
-	if regA+crossA > 1 {
-		return 'b'
+func transposeArr(array *[][]int, m, n int) (arrayNew [][]int) {
+	arrayNew = make([][]int, n)
+	for i := range arrayNew {
+		arrayNew[i] = make([]int, m)
 	}
 
-	if
-
-	if 
+	for i := 0; i < m; i++ {
+		for j := 0; j < n; j++ {
+			arrayNew[j][i] = (*array)[i][j]
+		}
+	}
 
 	return
 }
