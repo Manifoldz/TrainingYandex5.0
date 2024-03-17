@@ -75,7 +75,7 @@ func ProcessHoriz(array *[][]int, m, n, counter int, reverse bool) bool {
 						num = 1
 					}
 					counter -= (*array)[i][j]
-					if i == m-1 || (counter-(*array)[i+1][j] == 0 || (*array)[i+1][j] != (*array)[i][j]) {
+					if i == m-1 || ((counter-(*array)[i+1][j] == 0 && num != 2) || (*array)[i+1][j] != (*array)[i][j]) {
 						add = true
 					}
 					for k := (*array)[i][j] - 1; k >= 0; k-- {
