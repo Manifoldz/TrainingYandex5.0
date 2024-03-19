@@ -7,7 +7,7 @@ import (
 )
 
 func main() {
-	//startTime := time.Now()
+	// startTime := time.Now()
 	var n int
 	reader := bufio.NewReader(os.Stdin)
 	_, err := fmt.Fscanf(reader, "%d\n", &n)
@@ -56,6 +56,7 @@ func main() {
 	}
 	var printX, printY int
 	var find3 bool
+	var checkedMap = make(map[int]bool, n)
 	for i, slice1 := range myMap {
 		for k := 0; k < len(slice1); k++ {
 			x1 := i
@@ -68,6 +69,8 @@ func main() {
 					} else {
 						l = k + 1
 					}
+				} else if checkedMap[j] {
+					continue
 				}
 				x2 := j
 				sum3 := x1 + x2 + y1
@@ -112,9 +115,8 @@ func main() {
 					}
 				}
 			}
-
+			checkedMap[i] = true
 		}
-		delete(myMap, i)
 	}
 	if find3 {
 		fmt.Println(1)
@@ -124,8 +126,8 @@ func main() {
 		fmt.Println(x4, y4)
 		fmt.Println(x5, y5)
 	}
-	//diffTime := time.Since(startTime)
-	//fmt.Println(diffTime)
+	// diffTime := time.Since(startTime)
+	// fmt.Println(diffTime)
 }
 
 func isInSlice(mySlice []int, check int) bool {
