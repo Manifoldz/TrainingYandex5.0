@@ -4,14 +4,11 @@ import (
 	"bufio"
 	"fmt"
 	"os"
+	"time"
 )
 
-type myStruct struct {
-	key   int
-	array []int
-}
-
 func main() {
+	startTime := time.Now()
 	var n int
 	reader := bufio.NewReader(os.Stdin)
 	_, err := fmt.Fscanf(reader, "%d\n", &n)
@@ -20,7 +17,7 @@ func main() {
 		return
 	}
 
-	myMatrix := make([]myStruct, 0, n)
+	myMap := make(map[int][]int, n)
 	var x4, y4, x5, y5 int
 
 	for i := 0; i < n; i++ {
@@ -31,15 +28,12 @@ func main() {
 			return
 		}
 
-		index := isInMatrix(myMatrix, x)
+		_, ok := myMap[x]
 
-		if index == -1 {
-			var newStruct myStruct
-			newStruct.key = x
-			newStruct.array = append(newStruct.array, y)
-			myMatrix = append(myMatrix, newStruct)
-		} else if !isInSlice(myMatrix[index].array, y) {
-			myMatrix[index].array = append(myMatrix[index].array, y)
+		if !ok {
+			myMap[x] = append(myMap[x], y)
+		} else if !isInSlice(myMap[x], y) {
+			myMap[x] = append(myMap[x], y)
 		}
 
 		if i == 1 {
@@ -48,43 +42,56 @@ func main() {
 			x5, y4 = x, y
 		}
 	}
-	if len(myMatrix) == 1 && len(myMatrix[0].array) == 1 {
-		fmt.Println(3)
-		fmt.Println(myMatrix[0].key+1, myMatrix[0].key)
-		fmt.Println(myMatrix[0].key+1, myMatrix[0].key+1)
-		fmt.Println(myMatrix[0].key, myMatrix[0].key+1)
-		return
+	if len(myMap) == 1 {
+		var key int
+		var slice1 []int
+		for key, slice1 = range myMap {
+		}
+		if len(slice1) == 1 {
+			fmt.Println(3)
+			fmt.Println(key+1, slice1[0])
+			fmt.Println(key+1, slice1[0]+1)
+			fmt.Println(key, slice1[0]+1)
+			return
+		}
 	}
 	var printX, printY int
 	var find3 bool
-	for i := 0; i < len(myMatrix)-1; i++ {
-		for k := 0; k < len(myMatrix[i].array); k++ {
-			x1 := myMatrix[i].key
-			y1 := myMatrix[i].array[k]
-			for j := i + 1; j < len(myMatrix); j++ {
-				x2 := myMatrix[j].key
+	var exceptSlice = make([]int, 0, n)
+	for i, slice1 := range myMap {
+		exceptSlice = append(exceptSlice, i)
+		for k := 0; k < len(slice1); k++ {
+			x1 := i
+			y1 := slice1[k]
+			for j, slice2 := range myMap {
+				if isInSlice(exceptSlice, j) {
+					continue
+				}
+				x2 := j
+				sum3 := x1 + x2 + y1
+				ded3 := x1 + x2 - y1
 				//итерация по столбцу соседнему
-				for l := 0; l < len(myMatrix[j].array); l++ {
-					y2 := myMatrix[j].array[l]
-					if (x1+x2+y1+y2)%2 != 0 || (x1+x2-y1-y2)%2 != 0 {
+				for l := 0; l < len(slice2); l++ {
+					y2 := slice2[l]
+					if (sum3+y2)%2 != 0 || (ded3-y2)%2 != 0 {
 						continue
 					}
-					sum3 := (x1 + x2 + y1 + y2) / 2
-					ded3 := (x1 + x2 - y1 - y2) / 2
+					sum3 = (sum3 + y2) / 2
+					ded3 = (ded3 - y2) / 2
 					x4, y4 = ded3+y1, sum3-x1
 					x5, y5 = ded3+y2, sum3-x2
-					index4 := isInMatrix(myMatrix, x4)
-					index5 := isInMatrix(myMatrix, x5)
+					slice4, ok1 := myMap[x4]
+					slice5, ok2 := myMap[x5]
 					if !find3 {
-						if index4 != -1 {
-							if isInSlice(myMatrix[index4].array, y4) {
+						if ok1 {
+							if isInSlice(slice4, y4) {
 								printX = x5
 								printY = y5
 								find3 = true
 							}
 						}
-						if index5 != -1 {
-							if isInSlice(myMatrix[index5].array, y5) {
+						if ok2 {
+							if isInSlice(slice5, y5) {
 								if printX == x5 && printY == y5 {
 									fmt.Println(0)
 									return
@@ -96,7 +103,7 @@ func main() {
 							}
 						}
 					} else {
-						if index4 != -1 && index5 != -1 && isInSlice(myMatrix[index4].array, y4) && isInSlice(myMatrix[index5].array, y5) {
+						if ok1 && ok2 && isInSlice(slice4, y4) && isInSlice(slice5, y5) {
 							fmt.Println(0)
 							return
 						}
@@ -114,6 +121,8 @@ func main() {
 		fmt.Println(x4, y4)
 		fmt.Println(x5, y5)
 	}
+	diffTime := time.Since(startTime)
+	fmt.Println(diffTime)
 }
 
 func isInSlice(mySlice []int, check int) bool {
@@ -123,13 +132,4 @@ func isInSlice(mySlice []int, check int) bool {
 		}
 	}
 	return false
-}
-
-func isInMatrix(myMatrix []myStruct, check int) int {
-	for i := 0; i < len(myMatrix); i++ {
-		if myMatrix[i].key == check {
-			return i
-		}
-	}
-	return -1
 }
