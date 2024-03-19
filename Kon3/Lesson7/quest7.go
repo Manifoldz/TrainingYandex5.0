@@ -4,11 +4,10 @@ import (
 	"bufio"
 	"fmt"
 	"os"
-	"time"
 )
 
 func main() {
-	startTime := time.Now()
+	//startTime := time.Now()
 	var n int
 	reader := bufio.NewReader(os.Stdin)
 	_, err := fmt.Fscanf(reader, "%d\n", &n)
@@ -57,21 +56,24 @@ func main() {
 	}
 	var printX, printY int
 	var find3 bool
-	var exceptSlice = make([]int, 0, n)
 	for i, slice1 := range myMap {
-		exceptSlice = append(exceptSlice, i)
 		for k := 0; k < len(slice1); k++ {
 			x1 := i
 			y1 := slice1[k]
 			for j, slice2 := range myMap {
-				if isInSlice(exceptSlice, j) {
-					continue
+				var l int
+				if i == j {
+					if k == len(slice1)-1 {
+						continue
+					} else {
+						l = k + 1
+					}
 				}
 				x2 := j
 				sum3 := x1 + x2 + y1
 				ded3 := x1 + x2 - y1
 				//итерация по столбцу соседнему
-				for l := 0; l < len(slice2); l++ {
+				for ; l < len(slice2); l++ {
 					y2 := slice2[l]
 					if (sum3+y2)%2 != 0 || (ded3-y2)%2 != 0 {
 						continue
@@ -112,6 +114,7 @@ func main() {
 			}
 
 		}
+		delete(myMap, i)
 	}
 	if find3 {
 		fmt.Println(1)
@@ -121,8 +124,8 @@ func main() {
 		fmt.Println(x4, y4)
 		fmt.Println(x5, y5)
 	}
-	diffTime := time.Since(startTime)
-	fmt.Println(diffTime)
+	//diffTime := time.Since(startTime)
+	//fmt.Println(diffTime)
 }
 
 func isInSlice(mySlice []int, check int) bool {
