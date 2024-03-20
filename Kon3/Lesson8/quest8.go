@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	"strings"
 )
 
 func main() {
@@ -30,50 +29,85 @@ func main() {
 		needMap[p1] = append(needMap[p1], fmt.Sprintf("dx%ddy%d", x2-x1, y2-y1))
 		needMap[p2] = append(needMap[p2], fmt.Sprintf("dx%ddy%d", x1-x2, y1-y2))
 	}
-
-	//поиск базы(найдем самую подходящую площадку)
 	max := 0
-	var staticSlice []string
-	var static
-	for keyNeed, valNeedSlice := range needMap {
-		if len(valHaveSlice) <= max {
-			continue
-		}
-		for keyHave, valHaveSlice := range haveMap {
-			if len(valHaveSlice) <= max {
-				continue
-			}
-			commP, := commVal(valNeedSlice, valHaveSlice)
-			if commP > max {
-				max = commP
-				staticMap
-			}
+
+	//запускаем обход с каждой точки и сохраняем самую длинный обход
+	for key := range haveMap {
+		num := startMatch(key, haveMap, needMap)
+		if num > max {
+			max = num
 		}
 	}
+
+	fmt.Print(n - max)
+
 }
 
-func isInSlice(mySlice []string, check string) bool {
-	for _, val := range mySlice {
-		if strings.Compare(val, check) == 0 {
-			return true
-		}
-	}
-	return false
-}
-
-func commVal(slice1 []string, slice2 []string, staticSlice*[]string) (int) {
-	var count int
-	sliceCom := make([]string, 0, len(slice1))
-	for _, valNeed := range slice1 {
-		for _, valHave := range slice2 {
-			if valNeed == valHave {
-				count++
-				sliceCom = append(sliceCom, valNeed)
+func startMatch(key string, haveMap map[string][]string, needMap map[string][]string) int {
+	max := 0
+	for _, valSlice := range haveMap[key] {
+		for key2 := range needMap {
+			for _, valSlice2 := range needMap[key2] {
+				if valSlice == valSlice2 {
+					//var backupNeed map[string][]string
+					//copy(backupHave, haveMap)
+					//copy(backupNeed, needMap)
+					banMap1 := make(map[string]int, len(haveMap))
+					banMap2 := make(map[string]int, len(needMap))
+					banMap1[key]++
+					banMap2[key2]++
+					num := countMatch(key, key2, valSlice, haveMap, needMap, banMap1, banMap2)
+					if num > max {
+						max = num
+					}
+				}
 			}
 		}
 	}
-	return count, sliceCom
+	return max
 }
 
+func countMatch(key1, key2, valSlice string, haveMap map[string][]string, needMap map[string][]string, banMap1 map[string]int, banMap2 map[string]int) int {
+	//расшифруем точки
+	var dx, dy int
+	fmt.Sscanf(valSlice, "dx%ddy%d", &dx, &dy)
+	var x1, y1, x2, y2 int
+	fmt.Sscanf(key1, "x%dy%d", &x1, &y1)
+	fmt.Sscanf(key2, "x%dy%d", &x2, &y2)
 
-func 
+	key1 = fmt.Sprintf("x%dy%d", x1+dx, y1+dy)
+	key2 = fmt.Sprintf("x%dy%d", x2+dx, y2+dy)
+
+	if countTheSame(haveMap[key1]) == banMap1[key1] {
+		return 0
+	}
+
+	if countTheSame(needMap[key2]) == banMap2[key2] {
+		return 0
+	}
+	banMap1[key1]++
+	banMap2[key2]++
+	num := 1
+	for _, valSlice1 := range haveMap[key1] {
+		for _, valSlice2 := range needMap[key2] {
+			if valSlice1 == valSlice2 {
+				num += countMatch(key1, key2, valSlice1, haveMap, needMap, banMap1, banMap2)
+			}
+		}
+	}
+	return num
+}
+
+func countTheSame(srcSlice []string) int {
+	max := 1
+	var tempMap = make(map[string]int)
+	for _, value := range srcSlice {
+		tempMap[value]++
+	}
+	for _, value := range tempMap {
+		if value > max {
+			max = value
+		}
+	}
+	return max
+}
