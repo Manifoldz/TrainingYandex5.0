@@ -71,8 +71,12 @@ func main() {
 			}
 		}
 	}
+	max += count
+	if col > max {
+		max = col
+	}
 
-	fmt.Print(n - max - col - count)
+	fmt.Print(n - max)
 	diffTime := time.Since(startTime)
 	fmt.Println()
 	fmt.Print(diffTime)
