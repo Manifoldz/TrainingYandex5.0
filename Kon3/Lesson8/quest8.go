@@ -7,11 +7,11 @@ import (
 
 func main() {
 	var n int
-	fmt.Scan(&n)
+	fmt.Scanf("%d\n", &n)
 	//имеющиеся
+	var x1, y1, x2, y2 int
 	haveMap := make(map[string][]string)
 	for i := 0; i < n; i++ {
-		var x1, y1, x2, y2 int
 		fmt.Scanf("%d %d %d %d\n", &x1, &y1, &x2, &y2)
 		p1 := fmt.Sprintf("x%dy%d", x1, y1)
 		p2 := fmt.Sprintf("x%dy%d", x2, y2)
@@ -19,7 +19,7 @@ func main() {
 		haveMap[p1] = append(haveMap[p1], fmt.Sprintf("dx%ddy%d", x2-x1, y2-y1))
 		haveMap[p2] = append(haveMap[p2], fmt.Sprintf("dx%ddy%d", x1-x2, y1-y2))
 	}
-	var col = n
+	var col = 0
 	//необходимые
 	needMap := make(map[string][]string)
 	for i := 0; i < n; i++ {
@@ -28,9 +28,13 @@ func main() {
 		p1 := fmt.Sprintf("x%dy%d", x1, y1)
 		p2 := fmt.Sprintf("x%dy%d", x2, y2)
 		if _, ok := haveMap[p1]; ok {
-			if isInSlice(haveMap[p1], fmt.Sprintf("dx%ddy%d", x2-x1, y2-y1)) {
-				col--
-				continue
+			if isInSlice(haveMap, p1, fmt.Sprintf("dx%ddy%d", x2-x1, y2-y1), true) {
+				if _, ok := haveMap[p2]; ok {
+					if isInSlice(haveMap, p2, fmt.Sprintf("dx%ddy%d", x1-x2, y1-y2), true) {
+						col++
+						continue
+					}
+				}
 			}
 		}
 		needMap[p1] = append(needMap[p1], fmt.Sprintf("dx%ddy%d", x2-x1, y2-y1))
@@ -47,30 +51,68 @@ func main() {
 		}
 	}
 
-	fmt.Print(col - max)
+	if col > max {
+		max = col
+	}
+
+	fmt.Print(n - max)
 
 }
 
-func startMatch(key string, haveMap map[string][]string, needMap map[string][]string) int {
-	max := 0
+func startMatch(key string, haveMap map[string][]string, needMap map[string][]string) (max int) {
+	var countTheSame int
 	for _, valSlice := range haveMap[key] {
 		for key2 := range needMap {
 			for _, valSlice2 := range needMap[key2] {
 				if valSlice == valSlice2 {
-					//var backupNeed map[string][]string
-					//copy(backupHave, haveMap)
-					//copy(backupNeed, needMap)
 					banMap1 := make(map[string]bool, len(haveMap))
 					banMap2 := make(map[string]bool, len(needMap))
 					num := countMatch(key, key2, valSlice, haveMap, needMap, banMap1, banMap2)
 					if num > max {
+						countTheSame = countSame(haveMap, needMap, key, key2)
 						max = num
+					} else if num == max {
+						newTheSame := countSame(haveMap, needMap, key, key2)
+						if newTheSame > countTheSame {
+							max = num
+							countTheSame = newTheSame
+						}
 					}
 				}
 			}
 		}
 	}
-	return max
+	return max + countTheSame
+}
+
+func countSame(haveMap map[string][]string, needMap map[string][]string, key1, key2 string) int {
+	var dX, dY int
+	var count int
+	var x1, y1, x2, y2 int
+	fmt.Sscanf(key1, "x%dy%d", &x1, &y1)
+	fmt.Sscanf(key2, "x%dy%d", &x2, &y2)
+	dX = x2 - x1
+	dY = y2 - y1
+
+	for key, valueSlice := range haveMap {
+		fmt.Sscanf(key, "x%dy%d", &x1, &y1)
+		p1 := fmt.Sprintf("x%dy%d", x1+dX, y1+dY)
+		if _, ok := needMap[p1]; ok {
+			for _, val := range valueSlice {
+				if isInSlice(needMap, p1, val, false) {
+					fmt.Sscanf(val, "dx%ddy%d", &x2, &y2)
+					p2 := fmt.Sprintf("x%dy%d", x1+x2+dX, y1+y2+dY)
+					if _, ok := needMap[p2]; ok {
+						if isInSlice(needMap, p2, fmt.Sprintf("dx%ddy%d", x1+dX, y1+dY), false) {
+							count++
+							continue
+						}
+					}
+				}
+			}
+		}
+	}
+	return count
 }
 
 func countMatch(key1, key2, valSlice string, haveMap map[string][]string, needMap map[string][]string, banMap1 map[string]bool, banMap2 map[string]bool) int {
@@ -105,31 +147,18 @@ func countMatch(key1, key2, valSlice string, haveMap map[string][]string, needMa
 	return num
 }
 
-// func theSame(haveMap, needMap map[string][]string) {
-// 	var count int
-// 	for key1, haveSlice := range haveMap {
-// 		if needSlice, ok := needMap[key1]; ok {
-// 			for idx1, val1 := range haveSlice {
-// 				for idx2, val2 := range needSlice {
-// 					if val2 == val1 {
-// 						count++
-// 						haveSlice[idx1] = haveSlice[len(haveSlice)-1]
-// 						haveSlice[len(haveSlice)-1] = ""
-// 						haveSlice = haveSlice[:len(haveSlice)-2]
-
-// 						needSlice[idx2] = needSlice[len(needSlice)-1]
-// 						needSlice[len(needSlice)-1] = ""
-// 						needSlice = needSlice[:len(needSlice)-2]
-// 					}
-// 				}
-// 			}
-// 		}
-// 	}
-// }
-
-func isInSlice(mySlice []string, check string) bool {
-	for _, val := range mySlice {
+func isInSlice(mapDest map[string][]string, p1 string, check string, change bool) bool {
+	for idx, val := range mapDest[p1] {
 		if strings.Compare(val, check) == 0 {
+			if change {
+				if len(mapDest[p1]) == 1 {
+					delete(mapDest, p1)
+				} else if len(mapDest[p1])-1 != idx {
+					mapDest[p1] = append(mapDest[p1][:idx], mapDest[p1][idx+1:]...)
+				} else {
+					mapDest[p1] = mapDest[p1][:idx]
+				}
+			}
 			return true
 		}
 	}
