@@ -1,66 +1,74 @@
 package main
 
 import (
+	"bufio"
 	"fmt"
+	"os"
 	"strings"
+	"time"
 )
 
 func main() {
 	var n int
-	fmt.Scanf("%d\n", &n)
-	//имеющиеся
+	startTime := time.Now()
+	reader := bufio.NewReader(os.Stdin)
+	fmt.Fscanf(reader, "%d\n", &n)
+	//имеющиесяs
 	var x1, y1, x2, y2 int
 	haveMap := make(map[string][]string)
 	for i := 0; i < n; i++ {
-		fmt.Scanf("%d %d %d %d\n", &x1, &y1, &x2, &y2)
+		fmt.Fscanf(reader, "%d %d %d %d\n", &x1, &y1, &x2, &y2)
+		if x1 > x2 {
+			x2, x1 = x1, x2
+			y2, y1 = y1, y2
+		} else if y2 < y1 {
+			y2, y1 = y1, y2
+		}
 		p1 := fmt.Sprintf("x%dy%d", x1, y1)
-		p2 := fmt.Sprintf("x%dy%d", x2, y2)
-
 		haveMap[p1] = append(haveMap[p1], fmt.Sprintf("dx%ddy%d", x2-x1, y2-y1))
-		haveMap[p2] = append(haveMap[p2], fmt.Sprintf("dx%ddy%d", x1-x2, y1-y2))
 	}
 	var col = 0
 	//необходимые
 	needMap := make(map[string][]string)
 	for i := 0; i < n; i++ {
 		var x1, y1, x2, y2 int
-		fmt.Scanf("%d %d %d %d\n", &x1, &y1, &x2, &y2)
+		fmt.Fscanf(reader, "%d %d %d %d\n", &x1, &y1, &x2, &y2)
+		if x1 > x2 {
+			x2, x1 = x1, x2
+			y2, y1 = y1, y2
+		} else if y2 < y1 {
+			y2, y1 = y1, y2
+		}
 		p1 := fmt.Sprintf("x%dy%d", x1, y1)
-		p2 := fmt.Sprintf("x%dy%d", x2, y2)
 		if _, ok := haveMap[p1]; ok {
 			if isInSlice(haveMap, p1, fmt.Sprintf("dx%ddy%d", x2-x1, y2-y1), true) {
-				if _, ok := haveMap[p2]; ok {
-					if isInSlice(haveMap, p2, fmt.Sprintf("dx%ddy%d", x1-x2, y1-y2), true) {
-						col++
-						continue
-					}
-				}
+				col++
+				continue
 			}
 		}
 		needMap[p1] = append(needMap[p1], fmt.Sprintf("dx%ddy%d", x2-x1, y2-y1))
-		needMap[p2] = append(needMap[p2], fmt.Sprintf("dx%ddy%d", x1-x2, y1-y2))
 	}
 	max := 0
-	//theSame(haveMap, needMap)
-
 	//запускаем обход с каждой точки и сохраняем самую длинный обход
+	var count int
 	for key := range haveMap {
-		num := startMatch(key, haveMap, needMap)
+		num, countTheSame := startMatch(key, haveMap, needMap)
 		if num > max {
 			max = num
+			count = countTheSame
+		} else if num == max {
+			if count < countTheSame {
+				count = countTheSame
+			}
 		}
 	}
 
-	if col > max {
-		max = col
-	}
-
-	fmt.Print(n - max)
-
+	fmt.Print(n - max - col - count)
+	diffTime := time.Since(startTime)
+	fmt.Print(diffTime)
 }
 
-func startMatch(key string, haveMap map[string][]string, needMap map[string][]string) (max int) {
-	var countTheSame int
+func startMatch(key string, haveMap map[string][]string, needMap map[string][]string) (max int, countTheSame int) {
 	for _, valSlice := range haveMap[key] {
 		for key2 := range needMap {
 			for _, valSlice2 := range needMap[key2] {
@@ -69,12 +77,11 @@ func startMatch(key string, haveMap map[string][]string, needMap map[string][]st
 					banMap2 := make(map[string]bool, len(needMap))
 					num := countMatch(key, key2, valSlice, haveMap, needMap, banMap1, banMap2)
 					if num > max {
-						countTheSame = countSame(haveMap, needMap, key, key2)
+						countTheSame = countSame(haveMap, needMap, key, key2) - num
 						max = num
 					} else if num == max {
-						newTheSame := countSame(haveMap, needMap, key, key2)
+						newTheSame := countSame(haveMap, needMap, key, key2) - num
 						if newTheSame > countTheSame {
-							max = num
 							countTheSame = newTheSame
 						}
 					}
@@ -82,7 +89,7 @@ func startMatch(key string, haveMap map[string][]string, needMap map[string][]st
 			}
 		}
 	}
-	return max + countTheSame
+	return max, countTheSame
 }
 
 func countSame(haveMap map[string][]string, needMap map[string][]string, key1, key2 string) int {
@@ -100,14 +107,8 @@ func countSame(haveMap map[string][]string, needMap map[string][]string, key1, k
 		if _, ok := needMap[p1]; ok {
 			for _, val := range valueSlice {
 				if isInSlice(needMap, p1, val, false) {
-					fmt.Sscanf(val, "dx%ddy%d", &x2, &y2)
-					p2 := fmt.Sprintf("x%dy%d", x1+x2+dX, y1+y2+dY)
-					if _, ok := needMap[p2]; ok {
-						if isInSlice(needMap, p2, fmt.Sprintf("dx%ddy%d", x1+dX, y1+dY), false) {
-							count++
-							continue
-						}
-					}
+					count++
+					continue
 				}
 			}
 		}
