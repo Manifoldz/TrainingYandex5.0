@@ -4,52 +4,61 @@ import (
 	"bufio"
 	"fmt"
 	"os"
-	"strings"
 	"time"
 )
+
+type point struct {
+	x int
+	y int
+}
+
+type direction struct {
+	dx int
+	dy int
+}
 
 func main() {
 	var n int
 	startTime := time.Now()
 	reader := bufio.NewReader(os.Stdin)
 	fmt.Fscanf(reader, "%d\n", &n)
-	//имеющиесяs
-	var x1, y1, x2, y2 int
-	haveMap := make(map[string][]string)
+	//имеющиеся
+	haveMap := make(map[point][]direction)
 	for i := 0; i < n; i++ {
-		fmt.Fscanf(reader, "%d %d %d %d\n", &x1, &y1, &x2, &y2)
-		if x1 > x2 {
-			x2, x1 = x1, x2
-			y2, y1 = y1, y2
-		} else if y2 < y1 {
-			y2, y1 = y1, y2
+		var p1, p2 point
+		fmt.Fscanf(reader, "%d %d %d %d\n", &p1.x, &p1.y, &p2.x, &p2.y)
+		if p1.x > p2.x {
+			p2.x, p1.x = p1.x, p2.x
+			p2.y, p1.y = p1.y, p2.y
+		} else if p2.y < p1.y && p1.x == p2.x {
+			p2.y, p1.y = p1.y, p2.y
 		}
-		p1 := fmt.Sprintf("x%dy%d", x1, y1)
-		haveMap[p1] = append(haveMap[p1], fmt.Sprintf("dx%ddy%d", x2-x1, y2-y1))
+		dir := direction{p2.x - p1.x, p2.y - p1.y}
+		haveMap[p1] = append(haveMap[p1], dir)
 	}
 	var col = 0
 	//необходимые
-	needMap := make(map[string][]string)
+	needMap := make(map[point][]direction)
 	for i := 0; i < n; i++ {
-		var x1, y1, x2, y2 int
-		fmt.Fscanf(reader, "%d %d %d %d\n", &x1, &y1, &x2, &y2)
-		if x1 > x2 {
-			x2, x1 = x1, x2
-			y2, y1 = y1, y2
-		} else if y2 < y1 {
-			y2, y1 = y1, y2
+		var p1, p2 point
+		fmt.Fscanf(reader, "%d %d %d %d\n", &p1.x, &p1.y, &p2.x, &p2.y)
+		if p1.x > p2.x {
+			p2.x, p1.x = p1.x, p2.x
+			p2.y, p1.y = p1.y, p2.y
+		} else if p2.y < p1.y && p1.x == p2.x {
+			p2.y, p1.y = p1.y, p2.y
 		}
-		p1 := fmt.Sprintf("x%dy%d", x1, y1)
+		dir := direction{p2.x - p1.x, p2.y - p1.y}
 		if _, ok := haveMap[p1]; ok {
-			if isInSlice(haveMap, p1, fmt.Sprintf("dx%ddy%d", x2-x1, y2-y1), true) {
+			if isInSlice(haveMap, p1, dir, true) {
 				col++
 				continue
 			}
 		}
-		needMap[p1] = append(needMap[p1], fmt.Sprintf("dx%ddy%d", x2-x1, y2-y1))
+		needMap[p1] = append(needMap[p1], dir)
 	}
 	max := 0
-	//запускаем обход с каждой точки и сохраняем самую длинный обход
+	//запускаем обход с каждой точки и сохраняем самый длинный обход
 	var count int
 	for key := range haveMap {
 		num, countTheSame := startMatch(key, haveMap, needMap)
@@ -65,16 +74,17 @@ func main() {
 
 	fmt.Print(n - max - col - count)
 	diffTime := time.Since(startTime)
+	fmt.Println()
 	fmt.Print(diffTime)
 }
 
-func startMatch(key string, haveMap map[string][]string, needMap map[string][]string) (max int, countTheSame int) {
+func startMatch(key point, haveMap map[point][]direction, needMap map[point][]direction) (max int, countTheSame int) {
 	for _, valSlice := range haveMap[key] {
 		for key2 := range needMap {
 			for _, valSlice2 := range needMap[key2] {
 				if valSlice == valSlice2 {
-					banMap1 := make(map[string]bool, len(haveMap))
-					banMap2 := make(map[string]bool, len(needMap))
+					banMap1 := make(map[point]bool, len(haveMap))
+					banMap2 := make(map[point]bool, len(needMap))
 					num := countMatch(key, key2, valSlice, haveMap, needMap, banMap1, banMap2)
 					if num > max {
 						countTheSame = countSame(haveMap, needMap, key, key2) - num
@@ -92,23 +102,17 @@ func startMatch(key string, haveMap map[string][]string, needMap map[string][]st
 	return max, countTheSame
 }
 
-func countSame(haveMap map[string][]string, needMap map[string][]string, key1, key2 string) int {
-	var dX, dY int
+func countSame(haveMap map[point][]direction, needMap map[point][]direction, key1, key2 point) int {
 	var count int
-	var x1, y1, x2, y2 int
-	fmt.Sscanf(key1, "x%dy%d", &x1, &y1)
-	fmt.Sscanf(key2, "x%dy%d", &x2, &y2)
-	dX = x2 - x1
-	dY = y2 - y1
+	dX := key2.x - key1.x
+	dY := key2.y - key1.y
 
 	for key, valueSlice := range haveMap {
-		fmt.Sscanf(key, "x%dy%d", &x1, &y1)
-		p1 := fmt.Sprintf("x%dy%d", x1+dX, y1+dY)
+		p1 := point{key.x + dX, key.y + dY}
 		if _, ok := needMap[p1]; ok {
 			for _, val := range valueSlice {
 				if isInSlice(needMap, p1, val, false) {
 					count++
-					continue
 				}
 			}
 		}
@@ -116,41 +120,35 @@ func countSame(haveMap map[string][]string, needMap map[string][]string, key1, k
 	return count
 }
 
-func countMatch(key1, key2, valSlice string, haveMap map[string][]string, needMap map[string][]string, banMap1 map[string]bool, banMap2 map[string]bool) int {
+func countMatch(key1, key2 point, valSlice direction, haveMap map[point][]direction, needMap map[point][]direction, banMap1 map[point]bool, banMap2 map[point]bool) int {
 	//расшифруем точки
-	var dx, dy int
-	fmt.Sscanf(valSlice, "dx%ddy%d", &dx, &dy)
-	var x1, y1, x2, y2 int
-	fmt.Sscanf(key1, "x%dy%d", &x1, &y1)
-	fmt.Sscanf(key2, "x%dy%d", &x2, &y2)
-
 	banMap1[key1] = true
 	banMap2[key2] = true
 
-	key1 = fmt.Sprintf("x%dy%d", x1+dx, y1+dy)
-	key2 = fmt.Sprintf("x%dy%d", x2+dx, y2+dy)
+	newKey1 := point{key1.x + valSlice.dx, key1.y + valSlice.dy}
+	newKey2 := point{key2.x + valSlice.dx, key2.y + valSlice.dy}
 
-	if _, ok := banMap1[key1]; ok {
+	if _, ok := banMap1[newKey1]; ok {
 		return 0
 	}
 
-	if _, ok := banMap2[key2]; ok {
+	if _, ok := banMap2[newKey2]; ok {
 		return 0
 	}
 	num := 1
-	for _, valSlice1 := range haveMap[key1] {
-		for _, valSlice2 := range needMap[key2] {
+	for _, valSlice1 := range haveMap[newKey1] {
+		for _, valSlice2 := range needMap[newKey2] {
 			if valSlice1 == valSlice2 {
-				num += countMatch(key1, key2, valSlice1, haveMap, needMap, banMap1, banMap2)
+				num += countMatch(newKey1, newKey2, valSlice1, haveMap, needMap, banMap1, banMap2)
 			}
 		}
 	}
 	return num
 }
 
-func isInSlice(mapDest map[string][]string, p1 string, check string, change bool) bool {
-	for idx, val := range mapDest[p1] {
-		if strings.Compare(val, check) == 0 {
+func isInSlice(mapDest map[point][]direction, p1 point, srcDir direction, change bool) bool {
+	for idx, dir := range mapDest[p1] {
+		if dir == srcDir {
 			if change {
 				if len(mapDest[p1]) == 1 {
 					delete(mapDest, p1)
