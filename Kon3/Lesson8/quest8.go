@@ -23,7 +23,7 @@ func main() {
 	reader := bufio.NewReader(os.Stdin)
 	fmt.Fscanf(reader, "%d\n", &n)
 	//имеющиеся
-	haveMap := make(map[point][]direction, n)
+	haveMap := make(map[point]map[direction]bool, n)
 	var p1, p2 point
 	for i := 0; i < n; i++ {
 		fmt.Fscanf(reader, "%d %d %d %d\n", &p1.x, &p1.y, &p2.x, &p2.y)
@@ -34,11 +34,14 @@ func main() {
 			p2.y, p1.y = p1.y, p2.y
 		}
 		dir := direction{p2.x - p1.x, p2.y - p1.y}
-		haveMap[p1] = append(haveMap[p1], dir)
+		if haveMap[p1] == nil {
+			haveMap[p1] = make(map[direction]bool)
+		}
+		haveMap[p1][dir] = true
 	}
 	//необходимые
 	var col int
-	needMap := make(map[point][]direction, n)
+	needMap := make(map[point]map[direction]bool, n)
 	for i := 0; i < n; i++ {
 		fmt.Fscanf(reader, "%d %d %d %d\n", &p1.x, &p1.y, &p2.x, &p2.y)
 		if p1.x > p2.x {
@@ -48,13 +51,15 @@ func main() {
 			p2.y, p1.y = p1.y, p2.y
 		}
 		dir := direction{p2.x - p1.x, p2.y - p1.y}
-		if _, ok := haveMap[p1]; ok {
-			if isInSlice(haveMap, p1, dir, true) {
-				col++
-				continue
-			}
+		if haveMap[p1][dir] {
+			delete(haveMap[p1], dir)
+			col++
+			continue
 		}
-		needMap[p1] = append(needMap[p1], dir)
+		if needMap[p1] == nil {
+			needMap[p1] = make(map[direction]bool)
+		}
+		needMap[p1][dir] = true
 	}
 	max := startMatch(haveMap, needMap)
 
@@ -68,61 +73,46 @@ func main() {
 	fmt.Print(diffTime)
 }
 
-func startMatch(haveMap map[point][]direction, needMap map[point][]direction) int {
+func startMatch(haveMap map[point]map[direction]bool, needMap map[point]map[direction]bool) int {
 	var max int
 	banMap1 := make(map[int]map[int]bool, len(haveMap))
-	for key := range haveMap {
+	for key1 := range haveMap {
 		for key2 := range needMap {
-			if banMap1[key2.x-key.x] != nil {
-				if banMap1[key2.x-key.x][key2.y-key.y] {
+			dX := key2.x - key1.x
+			dY := key2.y - key1.y
+
+			if banMap1[dX] != nil {
+				if banMap1[dX][dY] {
 					continue
 				}
 			}
-			num := countSame(haveMap, needMap, key, key2)
+
+			num := countSame(haveMap, needMap, dX, dY)
 			if num > max {
 				max = num
 			}
-			if banMap1[key2.x-key.x] == nil {
-				banMap1[key2.x-key.x] = make(map[int]bool)
+			if banMap1[dX] == nil {
+				banMap1[dX] = make(map[int]bool)
 			}
-			banMap1[key2.x-key.x][key2.y-key.y] = true
+			banMap1[dX][dY] = true
 		}
 	}
 
 	return max
 }
 
-func countSame(haveMap map[point][]direction, needMap map[point][]direction, key1, key2 point) int {
+func countSame(haveMap, needMap map[point]map[direction]bool, dX, dY int) int {
 	var count int
-	dX := key2.x - key1.x
-	dY := key2.y - key1.y
-	for key, valueSlice := range haveMap {
+
+	for key, dirMap := range haveMap {
 		p1 := point{key.x + dX, key.y + dY}
-		if _, ok := needMap[p1]; ok {
-			for _, val := range valueSlice {
-				if isInSlice(needMap, p1, val, false) {
+		if needMap[p1] != nil {
+			for dirKey := range dirMap {
+				if needMap[p1][dirKey] {
 					count++
 				}
 			}
 		}
 	}
 	return count
-}
-
-func isInSlice(mapDest map[point][]direction, p1 point, srcDir direction, change bool) bool {
-	for idx, dir := range mapDest[p1] {
-		if dir == srcDir {
-			if change {
-				if len(mapDest[p1]) == 1 {
-					delete(mapDest, p1)
-				} else if len(mapDest[p1])-1 != idx {
-					mapDest[p1] = append(mapDest[p1][:idx], mapDest[p1][idx+1:]...)
-				} else {
-					mapDest[p1] = mapDest[p1][:idx]
-				}
-			}
-			return true
-		}
-	}
-	return false
 }
