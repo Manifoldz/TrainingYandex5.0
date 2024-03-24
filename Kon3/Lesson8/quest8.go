@@ -4,12 +4,13 @@ import (
 	"bufio"
 	"fmt"
 	"os"
-	"time"
 )
 
 type point struct {
-	x int
-	y int
+	x1 int
+	y1 int
+	x2 int
+	y2 int
 }
 
 type direction struct {
@@ -19,100 +20,63 @@ type direction struct {
 
 func main() {
 	var n int
-	startTime := time.Now()
 	reader := bufio.NewReader(os.Stdin)
 	fmt.Fscanf(reader, "%d\n", &n)
-	//имеющиеся
-	haveMap := make(map[point]map[direction]bool, n)
-	var p1, p2 point
-	for i := 0; i < n; i++ {
-		fmt.Fscanf(reader, "%d %d %d %d\n", &p1.x, &p1.y, &p2.x, &p2.y)
-		if p1.x > p2.x {
-			p2.x, p1.x = p1.x, p2.x
-			p2.y, p1.y = p1.y, p2.y
-		} else if p2.y < p1.y && p1.x == p2.x {
-			p2.y, p1.y = p1.y, p2.y
-		}
-		dir := direction{p2.x - p1.x, p2.y - p1.y}
-		if haveMap[p1] == nil {
-			haveMap[p1] = make(map[direction]bool)
-		}
-		haveMap[p1][dir] = true
-	}
-	//необходимые
-	var col int
-	needMap := make(map[point]map[direction]bool, n)
-	for i := 0; i < n; i++ {
-		fmt.Fscanf(reader, "%d %d %d %d\n", &p1.x, &p1.y, &p2.x, &p2.y)
-		if p1.x > p2.x {
-			p2.x, p1.x = p1.x, p2.x
-			p2.y, p1.y = p1.y, p2.y
-		} else if p2.y < p1.y && p1.x == p2.x {
-			p2.y, p1.y = p1.y, p2.y
-		}
-		dir := direction{p2.x - p1.x, p2.y - p1.y}
-		if haveMap[p1][dir] {
-			delete(haveMap[p1], dir)
-			col++
-			continue
-		}
-		if needMap[p1] == nil {
-			needMap[p1] = make(map[direction]bool)
-		}
-		needMap[p1][dir] = true
-	}
-	max := startMatch(haveMap, needMap)
 
-	if col > max {
-		max = col
+	//имеющиеся
+	haveMap := make(map[point]bool, n)
+	for i := 0; i < n; i++ {
+		var p point
+		fmt.Fscanf(reader, "%d %d %d %d\n", &p.x1, &p.y1, &p.x2, &p.y2)
+		if p.x1 > p.x2 {
+			p.x2, p.x1 = p.x1, p.x2
+			p.y2, p.y1 = p.y1, p.y2
+		} else if p.y2 < p.y1 && p.x1 == p.x2 {
+			p.y2, p.y1 = p.y1, p.y2
+		}
+		haveMap[p] = true
 	}
+
+	//необходимые
+	needMap := make(map[point]bool, n)
+	for i := 0; i < n; i++ {
+		var p point
+		fmt.Fscanf(reader, "%d %d %d %d\n", &p.x1, &p.y1, &p.x2, &p.y2)
+		if p.x1 > p.x2 {
+			p.x2, p.x1 = p.x1, p.x2
+			p.y2, p.y1 = p.y1, p.y2
+		} else if p.y2 < p.y1 && p.x1 == p.x2 {
+			p.y2, p.y1 = p.y1, p.y2
+		}
+		needMap[p] = true
+	}
+
+	max := countSame(haveMap, needMap)
 
 	fmt.Print(n - max)
-	diffTime := time.Since(startTime)
-	fmt.Println()
-	fmt.Print(diffTime)
 }
 
-func startMatch(haveMap map[point]map[direction]bool, needMap map[point]map[direction]bool) int {
+func countSame(haveMap, needMap map[point]bool) int {
+
+	var counterMap = make(map[direction]int)
+
+	for p1 := range haveMap {
+		for p2 := range needMap {
+			var dir direction
+			dir.dx = p2.x2 - p1.x2
+			dir.dy = p2.y2 - p1.y2
+			if dir.dx == p2.x1-p1.x1 && dir.dy == p2.y1-p1.y1 {
+				counterMap[dir]++
+			}
+		}
+	}
+
 	var max int
-	banMap1 := make(map[int]map[int]bool, len(haveMap))
-	for key1 := range haveMap {
-		for key2 := range needMap {
-			dX := key2.x - key1.x
-			dY := key2.y - key1.y
-
-			if banMap1[dX] != nil {
-				if banMap1[dX][dY] {
-					continue
-				}
-			}
-
-			num := countSame(haveMap, needMap, dX, dY)
-			if num > max {
-				max = num
-			}
-			if banMap1[dX] == nil {
-				banMap1[dX] = make(map[int]bool)
-			}
-			banMap1[dX][dY] = true
+	for _, val := range counterMap {
+		if val > max {
+			max = val
 		}
 	}
 
 	return max
-}
-
-func countSame(haveMap, needMap map[point]map[direction]bool, dX, dY int) int {
-	var count int
-
-	for key, dirMap := range haveMap {
-		p1 := point{key.x + dX, key.y + dY}
-		if needMap[p1] != nil {
-			for dirKey := range dirMap {
-				if needMap[p1][dirKey] {
-					count++
-				}
-			}
-		}
-	}
-	return count
 }
