@@ -48,42 +48,39 @@ func main() {
 	left := minWidth2
 	right := width - minWidth1
 
-	var ans uint64
+	if left > right {
+		left, right = right, left
+	}
+
+	minRowM11 := countRows(arr1, (width - left))
+	minRowM12 := countRows(arr2, left)
+
+	//досрочный выход
+	if minRowM11 == minRowM12 {
+		fmt.Println(minRowM11)
+		return
+	}
+
+	saveFirst := max(minRowM11, minRowM12)
+
+	var isFirstMore bool
+	if minRowM11 > minRowM12 {
+		isFirstMore = true
+	}
+	//fmt.Println(left, right)
 	for left < right {
-		m1 := left + (right-left)/3
-		m2 := right - (right-left)/3
-		//считаем для м1
-		minRowM11 := countRows(arr1, (width - m1))
-		minRowM12 := countRows(arr2, m1)
+		mid := (left + right + 1) / 2
+		minRowM11 = countRows(arr1, (width - mid))
+		minRowM12 = countRows(arr2, mid)
 
-		//посчитаем для м2 и если оно больше чем макс первых двух, то дальше не нужно второе проверять
-		minRowM21 := countRows(arr1, (width - m2))
-		minRowM22 := countRows(arr2, m2)
-		//досрочный выход
-		if minRowM11 == minRowM12 {
-			ans = minRowM11
-			break
-		} else if minRowM21 == minRowM22 {
-			ans = minRowM21
-			break
-		}
-
-		//определим максимумы в обеих точках
-		ans = max(minRowM11, minRowM12)
-		minRowM21 = max(minRowM21, minRowM22)
-		if minRowM21 <= ans {
-			left = m1 + 1
-			ans = minRowM21
+		if isFirstMore == (minRowM11 > minRowM12) {
+			left = mid
 		} else {
-			right = m2 - 1
+			right = mid - 1
 		}
 	}
 
-	if ans == 0 {
-		ans = max(countRows(arr2, left), countRows(arr1, (width-left)))
-	}
-
-	fmt.Println(ans)
+	fmt.Println(min(max(countRows(arr1, (width-left)), countRows(arr2, left)), saveFirst))
 }
 
 func countRows(arr []uint64, width uint64) (numRows uint64) {
@@ -114,5 +111,13 @@ func max(a, b uint64) uint64 {
 		return a
 	} else {
 		return b
+	}
+}
+
+func min(a, b uint64) uint64 {
+	if a > b {
+		return b
+	} else {
+		return a
 	}
 }
