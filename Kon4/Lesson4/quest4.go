@@ -4,11 +4,9 @@ import (
 	"bufio"
 	"fmt"
 	"os"
-	"time"
 )
 
 func main() {
-	startTime := time.Now()
 	reader := bufio.NewReader(os.Stdin)
 	var width, numWord1, numWord2 uint64
 	fmt.Fscanf(reader, "%d %d %d\n", &width, &numWord1, &numWord2)
@@ -82,12 +80,10 @@ func main() {
 	}
 
 	if ans == 0 {
-		ans = max(countRows(arr1, left), countRows(arr1, (width-left)))
+		ans = max(countRows(arr2, left), countRows(arr1, (width-left)))
 	}
 
 	fmt.Println(ans)
-	diffTime := time.Since(startTime)
-	fmt.Println(diffTime)
 }
 
 func countRows(arr []uint64, width uint64) (numRows uint64) {
@@ -96,23 +92,19 @@ func countRows(arr []uint64, width uint64) (numRows uint64) {
 	left := 0
 	start := 0
 	for left != len(arr)-1 {
+		left = start
 		right := len(arr) - 1
 		for left < right {
 			mid := (left + right + 1) / 2
-			fmt.Print(right, left, mid-start, width, "!")
-			//fmt.Println(arr[mid] + uint64(mid-start))
 			if arr[mid]+uint64(mid-start) <= width {
 				left = mid
 			} else {
 				right = mid - 1
 			}
-			fmt.Println(right, left, mid-start, width)
 		}
 		width = width + step - (width - arr[left])
 		numRows++
-		left++
-		start = left
-
+		start = left + 1
 	}
 
 	return
