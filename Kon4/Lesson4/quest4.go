@@ -14,7 +14,11 @@ func main() {
 	var minWidth1, minWidth2 uint64
 	for i := uint64(0); i < numWord1; i++ {
 		var temp uint64
-		fmt.Fscan(reader, &temp)
+		if i == numWord1-1 {
+			fmt.Fscanf(reader, "%d\n", &temp)
+		} else {
+			fmt.Fscanf(reader, "%d ", &temp)
+		}
 		if temp > minWidth1 {
 			minWidth1 = temp
 		}
@@ -27,7 +31,11 @@ func main() {
 	arr2 := make([]uint64, numWord2)
 	for i := uint64(0); i < numWord2; i++ {
 		var temp uint64
-		fmt.Fscan(reader, &temp)
+		if i == numWord2-1 {
+			fmt.Fscanf(reader, "%d\n", &temp)
+		} else {
+			fmt.Fscanf(reader, "%d ", &temp)
+		}
 		if temp > minWidth2 {
 			minWidth2 = temp
 		}
@@ -40,15 +48,10 @@ func main() {
 	left := minWidth2
 	right := width - minWidth1
 
-	if left > right {
-		right, left = left, right
-	}
-
 	var ans uint64
 	for left < right {
 		m1 := left + (right-left)/3
 		m2 := right - (right-left)/3
-
 		//считаем для м1
 		minRowM11 := countRows(arr1, (width - m1))
 		minRowM12 := countRows(arr2, m1)
@@ -56,7 +59,6 @@ func main() {
 		//посчитаем для м2 и если оно больше чем макс первых двух, то дальше не нужно второе проверять
 		minRowM21 := countRows(arr1, (width - m2))
 		minRowM22 := countRows(arr2, m2)
-		//fmt.Printf("M11:%d M12%d M21%d M22%d", minRowM11, minRowM12, minRowM21, minRowM22)
 		//досрочный выход
 		if minRowM11 == minRowM12 {
 			ans = minRowM11
@@ -69,14 +71,12 @@ func main() {
 		//определим максимумы в обеих точках
 		ans = max(minRowM11, minRowM12)
 		minRowM21 = max(minRowM21, minRowM22)
-
-		if minRowM21 < ans {
+		if minRowM21 <= ans {
 			left = m1 + 1
 			ans = minRowM21
 		} else {
 			right = m2 - 1
 		}
-
 	}
 
 	if ans == 0 {
@@ -87,7 +87,6 @@ func main() {
 }
 
 func countRows(arr []uint64, width uint64) (numRows uint64) {
-	//fmt.Println(arr[0])
 	step := width
 	left := 0
 	start := 0
