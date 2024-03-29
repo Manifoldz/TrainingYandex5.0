@@ -67,20 +67,29 @@ func main() {
 	if minRowM11 > minRowM12 {
 		isFirstMore = true
 	}
-	//fmt.Println(left, right)
+	//fmt.Println(left, right, saveFirst)
+	var minCommon uint64 = 18446744073709551615
 	for left < right {
-		mid := (left + right + 1) / 2
+		mid := (left + right) / 2
 		minRowM11 = countRows(arr1, (width - mid))
 		minRowM12 = countRows(arr2, mid)
-
-		if isFirstMore == (minRowM11 > minRowM12) {
-			left = mid
+		minLocal := max(minRowM11, minRowM12)
+		if minLocal < minCommon {
+			minCommon = minLocal
+		}
+		if isFirstMore != (minRowM11 >= minRowM12) {
+			right = mid
 		} else {
-			right = mid - 1
+			left = mid + 1
 		}
 	}
 
-	fmt.Println(min(max(countRows(arr1, (width-left)), countRows(arr2, left)), saveFirst))
+	minLocal := max(countRows(arr1, (width-left)), countRows(arr2, left))
+	if minLocal < minCommon {
+		minCommon = minLocal
+	}
+
+	fmt.Println(min(minCommon, saveFirst))
 }
 
 func countRows(arr []uint64, width uint64) (numRows uint64) {
