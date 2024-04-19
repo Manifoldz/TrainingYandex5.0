@@ -2,6 +2,10 @@
     <img align="center"  src="pictures/Banner.png" />
 </p> 
 
+<p align="center"> 
+    <img align="center"  src="pictures/Certificate.jpg" />
+</p> 
+
 ### Яндекс-тренировки по алгоритмам 5.0. 
 Содержание:
 * Лекция 1: Сложность, тестирование, особые случаи [(Выполнено домашнего задания [9/10])](Kon/)
